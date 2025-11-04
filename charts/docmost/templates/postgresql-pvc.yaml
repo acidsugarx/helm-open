@@ -1,0 +1,16 @@
+{{- if .Values.postgresql.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "docmost.fullname" . }}-postgresql-data
+  labels:
+    {{- include "docmost.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    {{- toYaml .Values.postgresql.persistence.accessModes | nindent 4 }}
+  resources:
+    {{- toYaml .Values.postgresql.persistence.resources | nindent 4 }}
+  {{- if .Values.postgresql.persistence.storageClassName }}
+  storageClassName: {{ .Values.postgresql.persistence.storageClassName }}
+  {{- end }}
+{{- end }}

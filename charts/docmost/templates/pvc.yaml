@@ -1,0 +1,14 @@
+{{- if .Values.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "docmost.persistence.existingClaim" . }}
+  annotations:
+    helm.sh/resource-policy: keep
+spec:
+  accessModes:
+    {{- toYaml .Values.persistence.accessModes | nindent 4 }}
+  resources:
+    {{- toYaml .Values.persistence.resources | nindent 4 }}
+  storageClassName: {{ .Values.persistence.storageClassName | quote }}
+{{- end }}

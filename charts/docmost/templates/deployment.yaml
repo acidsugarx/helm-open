@@ -1,0 +1,126 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "docmost.fullname" . }}
+  labels:
+    {{- include "docmost.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "docmost.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "docmost.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "docmost.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - bash
+            - -c
+            - |
+              export DATABASE_URL="postgresql://${PGSQL_DB_USERNAME}:${PGSQL_DB_PASSWORD}@${PGSQL_DB_HOST}/${PGSQL_DB_NAME}?schema=public"
+              pnpm start
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: PGSQL_DB_HOST
+              value: {{ include "docmost.fullname" . }}-postgresql
+            - name: PGSQL_DB_NAME
+              value: {{ .Values.postgresql.auth.database | quote }}
+            - name: PGSQL_DB_USERNAME
+              value: {{ .Values.postgresql.auth.username | quote }}
+            - name: PGSQL_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "docmost.fullname" . }}-postgresql-secret
+                  key: postgresql-password
+            - name: APP_URL
+              value: {{ (required "An app URL is required" .Values.docmost.appUrl) | quote }}
+            - name: APP_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ printf "%s-app-secret" (include "docmost.fullname" .) }}
+                  key: appSecret
+            - name: REDIS_URL
+              value: "redis://{{ include "docmost.fullname" . }}-redis.docmost.svc.cluster.local:6379"
+            {{- if .Values.docmost.smtp.enabled }}
+            - name: MAIL_DRIVER
+              value: smtp
+            - name: SMTP_HOST
+              value: {{ (required "SMTP host is required." .Values.docmost.smtp.host) | quote }}
+            - name: SMTP_PORT
+              value: {{ .Values.docmost.smtp.port | quote }}
+            - name: SMTP_SECURE
+              value: {{ .Values.docmost.smtp.secure | quote }}
+            - name: MAIL_FROM_ADDRESS
+              value: {{ (required "Mail from address is required." .Values.docmost.smtp.mailFrom.address) | quote }}
+            - name: MAIL_FROM_NAME
+              value: {{ (required "Mail from name is required." .Values.docmost.smtp.mailFrom.name) | quote }}
+            - name: SMTP_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "docmost.smtp.auth.secretName" . }}
+                  key: username
+            - name: SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "docmost.smtp.auth.secretName" . }}
+                  key: password
+            {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /app/data/storage
+          {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: data
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "docmost.persistence.existingClaim" . }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,10 @@
+apiVersion: v2
+appVersion: 0.23.2
+description: 'Builtin Helm chart for the "Docmost": is an open-source collaborative wiki and documentation software.'
+home: https://github.com/acidsugarx/helm-open
+name: docmost
+sources:
+  - https://github.com/docmost/docmost
+  - https://github.com/acidsugarx/helm-open
+type: application
+version: 0.1.3
