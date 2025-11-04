@@ -1,0 +1,88 @@
+{{- range $name, $service := .Values.externalServices }}
+{{- if $service.enabled | default true }}
+{{- if $service.ingress }}
+{{- if $service.ingress.enabled | default true }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $name }}
+  namespace: {{ $service.namespace | default $.Values.namespace | default "default" }}
+  labels:
+    app: {{ $name }}
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+    heritage: {{ $.Release.Service }}
+  {{- $ingressAnnotations := $service.ingress.annotations | default $.Values.defaultSettings.ingress.annotations }}
+  {{- if $service.ingress.backendProtocol }}
+  {{- $ingressAnnotations = merge $ingressAnnotations (dict "nginx.ingress.kubernetes.io/backend-protocol" $service.ingress.backendProtocol) }}
+  {{- end }}
+  {{- with $ingressAnnotations }}
+  annotations:
+    {{- range $key, $value := . }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+  {{- end }}
+spec:
+  {{- $ingressClassName := $service.ingress.ingressClassName | default $.Values.defaultSettings.ingress.ingressClassName }}
+  {{- if $ingressClassName }}
+  ingressClassName: {{ $ingressClassName }}
+  {{- end }}
+  rules:
+  {{- if $service.ingress.rules }}
+  {{- range $service.ingress.rules }}
+  - host: {{ .host }}
+    http:
+      paths:
+      {{- range .http.paths }}
+      - path: {{ .path }}
+        pathType: {{ .pathType | default "Prefix" }}
+        backend:
+          service:
+            name: {{ $name }}
+            port:
+              number: {{ .backend.service.port.number }}
+      {{- end }}
+  {{- end }}
+  {{- else if $service.domain }}
+  - host: {{ $service.domain }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ $name }}
+            port:
+              number: 443
+  {{- end }}
+  {{- if $service.ingress.tlsEnabled | default $.Values.defaultSettings.ingress.tlsEnabled }}
+  {{- $tls := $service.ingress.tls }}
+  {{- if not $tls }}
+  {{- $useExistingCert := $service.ingress.useExistingCert | default $.Values.defaultSettings.ingress.useExistingCert }}
+  {{- $domain := $service.domain }}
+  tls:
+  {{- if $useExistingCert }}
+  - hosts:
+    - {{ $domain }}
+    secretName: {{ $useExistingCert }}
+  {{- else }}
+  - hosts:
+    - {{ $domain }}
+    secretName: {{ $name }}-tls
+  {{- end }}
+  {{- else }}
+  tls:
+    {{- range $tls }}
+  - hosts:
+      {{- range .hosts }}
+      - {{ . }}
+      {{- end }}
+    secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,111 @@
+external-services
+
+This Helm chart manages external services and their ingress rules with simplified configuration.
+
+## Configuration
+
+The following table lists the configurable parameters of the external-services chart and their default values.
+
+### Global Default Settings
+
+| Parameter                                 | Description                                   | Default                           |
+|-------------------------------------------|-----------------------------------------------|-----------------------------------|
+| `namespace`                               | Default namespace for services                | `service`                         |
+| `defaultSettings.ingress.annotations`     | Global ingress annotations                    | `{cert-manager.io/cluster-issuer: "letsencrypt"}` |
+| `defaultSettings.ingress.ingressClassName`| Global ingress class name                     | `nginx`                           |
+| `defaultSettings.ingress.tlsEnabled`      | Enable TLS globally                           | `true`                            |
+| `defaultSettings.ingress.useExistingCert` | Use existing certificate globally             | `false`                           |
+| `defaultSettings.ports`                   | Default port configuration                    | `[{port: 443, targetPort: 80, protocol: TCP, name: https}]` |
+| `defaultSettings.annotations`             | Default annotations for services              | `{}`                              |
+| `defaultSettings.backendProtocol`         | Default backend protocol                      | `""`                              |
+
+### External Services Parameters
+
+| Parameter                                 | Description                                   | Default                           |
+|-------------------------------------------|-----------------------------------------------|-----------------------------------|
+| `externalServices.{name}.enabled`         | Enable the service                            | `true`                            |
+| `externalServices.{name}.namespace`       | Namespace for the service                     | `service` (or global namespace)   |
+| `externalServices.{name}.externalName`    | External hostname for the service             | Required                          |
+| `externalServices.{name}.domain`          | Domain for the ingress rule                   | Required for ingress              |
+| `externalServices.{name}.annotations`     | Annotations for the service                   | Global default                    |
+| `externalServices.{name}.ports`           | List of port mappings                         | Global default                    |
+| `externalServices.{name}.ingress.enabled` | Enable ingress for this service               | `true`                            |
+| `externalServices.{name}.ingress.annotations` | Ingress annotations (merges with global)   | Global default                    |
+| `externalServices.{name}.ingress.ingressClassName` | Ingress class name                        | Global default                    |
+| `externalServices.{name}.ingress.tlsEnabled` | Enable TLS for this service                 | Global default                    |
+| `externalServices.{name}.ingress.useExistingCert` | Use existing certificate (secret name)   | Global default                    |
+| `externalServices.{name}.ingress.backendProtocol` | Backend protocol for ingress              | Global default                    |
+| `externalServices.{name}.ingress.rules`   | Custom ingress rules                          | Auto-generated from domain        |
+
+### Adding New Services
+
+To add a new service with minimal configuration using defaults:
+
+```yaml
+externalServices:
+  new-service-name:
+    enabled: true
+    namespace: service
+    externalName: new-service.example.com
+    domain: "new-service.example.com"
+    annotations: {}
+    ports:
+    - port: 443
+      targetPort: 80
+      name: https
+    ingress:
+      enabled: true
+      # Uses default settings from defaultSettings
+```
+
+To override specific settings while using defaults for others:
+
+```yaml
+externalServices:
+  new-service-name:
+    enabled: true
+    namespace: service
+    externalName: new-service.example.com
+    domain: "new-service.example.com"
+    ingress:
+      enabled: true
+      tlsEnabled: false  # Override to disable TLS
+      ingressClassName: alb  # Override ingress class
+```
+
+To use an existing certificate:
+
+```yaml
+externalServices:
+  existing-cert-service:
+    enabled: true
+    namespace: service
+    externalName: existing-cert.example.com
+    domain: "existing-cert.example.com"
+    ingress:
+      enabled: true
+      tlsEnabled: true
+      useExistingCert: "my-existing-cert-secret"  # Use existing certificate
+```
+
+### Installation
+
+To install this chart:
+
+```bash
+helm install my-release /path/to/external-services-chart
+```
+
+To install with a custom values file:
+
+```bash
+helm install my-release /path/to/external-services-chart -f my-values.yaml
+```
+
+### Updating
+
+To update an existing release:
+
+```bash
+helm upgrade my-release /path/to/external-services-chart -f my-values.yaml
+```

@@ -1,0 +1,37 @@
+{{- range $name, $service := .Values.externalServices }}
+{{- if $service.enabled | default true }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  namespace: {{ $service.namespace | default $.Values.namespace | default "default" }}
+  labels:
+    app: {{ $name }}
+    chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    release: {{ $.Release.Name }}
+    heritage: {{ $.Release.Service }}
+  {{- $serviceAnnotations := $service.annotations | default $.Values.defaultSettings.annotations }}
+  {{- if $service.ingress.backendProtocol }}
+  {{- $backendProtocol := printf "nginx.ingress.kubernetes.io/backend-protocol: %s" $service.ingress.backendProtocol }}
+  {{- $serviceAnnotations = merge $serviceAnnotations (dict "nginx.ingress.kubernetes.io/backend-protocol" $service.ingress.backendProtocol) }}
+  {{- end }}
+  {{- with $serviceAnnotations }}
+  annotations:
+    {{- range $key, $value := . }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+  {{- end }}
+spec:
+  type: ExternalName
+  externalName: {{ $service.externalName }}
+  ports:
+  {{- $ports := $service.ports | default $.Values.defaultSettings.ports }}
+  {{- range $ports }}
+  - port: {{ .port }}
+    targetPort: {{ .targetPort }}
+    protocol: {{ .protocol | default "TCP" }}
+    name: {{ .name | default "http" }}
+  {{- end }}
+{{- end }}
+{{- end }}

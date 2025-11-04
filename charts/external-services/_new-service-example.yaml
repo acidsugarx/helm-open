@@ -1,0 +1,41 @@
+# Example: Adding a new external service with simplified configuration
+namespace: service
+
+# Add your new service here
+externalServices:
+  # Example of adding a new service with minimal configuration
+  # Most settings will use default values from defaultSettings
+  my-new-service:
+    enabled: true
+    namespace: service
+    externalName: my-service.example.com
+    domain: "my-service.example.com"
+    annotations: {}
+    ports:
+    - port: 443
+      targetPort: 80
+      name: https
+    ingress:
+      enabled: true
+      # ingressClassName will default to nginx
+      # cluster-issuer will default to regru-dns
+      # TLS will be enabled by default
+      # no need to specify explicit rules if using domain-based path configuration
+
+  # Another example with some overrides
+  special-service:
+    enabled: true
+    namespace: service
+    externalName: special.example.com
+    domain: "special.example.com"
+    annotations: 
+      nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    ports:
+    - port: 443
+      targetPort: 9443
+      name: https
+    ingress:
+      enabled: true
+      backendProtocol: "HTTPS"  # Enables HTTPS backend protocol
+      tlsEnabled: true
+      useExistingCert: false    # Set to existing secret name to use existing cert
