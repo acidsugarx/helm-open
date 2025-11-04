@@ -1,5 +1,21 @@
 apiVersion: v1
 entries:
+  docmost:
+  - apiVersion: v2
+    appVersion: 0.23.2
+    created: "2025-11-04T19:57:57.539732544Z"
+    description: 'Builtin Helm chart for the "Docmost": is an open-source collaborative
+      wiki and documentation software.'
+    digest: 743c919d09500b2fc0a659c9df92fbe8a01e4a68760b9388bd19dfa24df460cf
+    home: https://github.com/acidsugarx/helm-open
+    name: docmost
+    sources:
+    - https://github.com/docmost/docmost
+    - https://github.com/acidsugarx/helm-open
+    type: application
+    urls:
+    - https://github.com/acidsugarx/helm-open/releases/download/docmost-0.1.3/docmost-0.1.3.tgz
+    version: 0.1.3
   external-services:
   - apiVersion: v2
     appVersion: "1.0"
@@ -34,4 +50,4 @@ entries:
     urls:
     - https://github.com/acidsugarx/helm-open/releases/download/external-services-0.1.0/external-services-0.1.0.tgz
     version: 0.1.0
-generated: "2025-11-04T18:10:05.173017266Z"
+generated: "2025-11-04T19:57:57.539743554Z"
