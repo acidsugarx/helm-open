@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  external-services:
+  - apiVersion: v2
+    appVersion: "1.0"
+    created: "2025-11-04T17:35:18.481079144Z"
+    description: A Helm chart for managing external services and ingress rules
+    digest: bab0ad7f282213b789a8c86a16c0f00b54169595f9eb2d2b2d7b4f71cc359c5c
+    name: external-services
+    type: application
+    urls:
+    - https://github.com/acidsugarx/helm-open/releases/download/external-services-0.1.0/external-services-0.1.0.tgz
+    version: 0.1.0
+generated: "2025-11-04T17:35:18.481084695Z"
