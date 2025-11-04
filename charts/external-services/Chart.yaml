@@ -1,6 +1,18 @@
 apiVersion: v2
 name: external-services
-description: A Helm chart for managing external services and ingress rules
+description: A Helm chart for easily deploying external services with ingress and TLS termination in private Kubernetes networks
 type: application
-version: 0.1.0
+version: 0.1.1
 appVersion: "1.0"
+keywords:
+  - external-services
+  - ingress
+  - tls
+  - networking
+  - proxy
+home: https://github.com/acidsugarx/helm-open
+sources:
+  - https://github.com/acidsugarx/helm-open
+maintainers:
+  - name: Ilya Gilev
+    email: jazer23569@gmail.com

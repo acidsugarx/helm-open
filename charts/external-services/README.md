@@ -1,17 +1,48 @@
-# External Services and Ingress Manage via Helm Chart
+# External Services 🌐
 
-This Helm chart provides a flexible way to manage external services and ingress rules in Kubernetes. It allows you to easily add new services with minimal configuration.
+A Helm chart for easily deploying external services with ingress and TLS termination in private Kubernetes networks.
+
+This chart is designed for environments where all external traffic routes through a single Ingress endpoint, enabling you to expose internal network services and virtual machines directly through Kubernetes without provisioning separate load balancer instances.
 
 ## Features
 
-- Define external services with minimal configuration
-- Support for TLS with automatic certificate generation
-- Configurable ingress settings (ingressClassName, annotations, etc.)
-- Support for custom backend protocols (e.g., HTTPS)
-- Default settings applied globally, with ability to override per service
-- Option to use existing certificates
+- 🔐 **TLS Ready**: Automatic certificate generation or bring your own
+- ⚙️ **Configurable**: Flexible ingress and service settings
+- 🚀 **Simple**: Minimal configuration for quick deployments
+- 🔁 **Protocol Support**: HTTPS backend protocols and custom annotations
 
-## Parameters
+## Quick Start
+
+To quickly install with minimal configuration:
+
+```bash
+# Add repo to the Helm.
+helm repo add homelab-charts https://acidsugarx.github.io/helm-open
+
+# Set values with cli
+helm install --namespace service --create-namespace my-external-service homelab-charts/external-services \
+  --set externalServices.minimal-example.enabled=true \
+  --set externalServices.minimal-example.externalName=example.com \
+  --set externalServices.minimal-example.domain="example.local"
+```
+
+Or create a minimal values file:
+
+```yaml
+externalServices:
+  minimal-example:
+    enabled: true
+    externalName: example.com
+    domain: "example.local"
+```
+
+Then install:
+
+```bash
+helm upgrade --namespace service --create-namespace my-external-service homelab-charts/external-services -f values.yaml 
+```
+
+## Configuration
 
 ### Global Parameters
 
@@ -44,86 +75,48 @@ This Helm chart provides a flexible way to manage external services and ingress 
 | `externalServices.[name].ingress.backendProtocol` | Backend protocol for ingress | Global default |
 | `externalServices.[name].ingress.rules` | Custom ingress rules | Auto-generated from domain |
 
-## Usage
-
-### Adding a New Service
-
-To add a new service, simply add it to your values file:
+### Service Definition
 
 ```yaml
 externalServices:
-  my-new-service:
+  my-service:
     enabled: true
     namespace: service
-    externalName: my-service.example.com
-    domain: "my-service.example.com"
-    annotations: {}
-    ports:
-    - port: 443
-      targetPort: 80
-      name: https
+    externalName: service.example.com
+    domain: "service.example.com"
     ingress:
-      enabled: true
       tlsEnabled: true
-      useExistingCert: false  # Set to existing secret name to use existing cert
+      useExistingCert: false  # Set to secret name for existing cert
 ```
 
-### Using Default Settings
+## Use Cases
 
-You can take advantage of default settings to minimize configuration:
+- **Private Network Traffic**: Route external services through Kubernetes
+- **TLS Termination**: Secure internal traffic with certificates
+- **Service Abstraction**: Hide complex external service details
 
+## Examples
+
+### Simple Service
 ```yaml
-# Only specify values that differ from defaults
 externalServices:
-  simplified-service:
+  simple-service:
     enabled: true
-    namespace: service
-    externalName: simple.example.com
+    externalName: internal.service.com
     domain: "simple.example.com"
-    # ingress configuration will use default settings
 ```
 
-### Disabling TLS
-
-To disable TLS for a specific service:
-
+### With Custom TLS
 ```yaml
 externalServices:
-  no-tls-service:
+  secure-service:
     enabled: true
-    namespace: service
-    externalName: no-tls.example.com
-    domain: "no-tls.example.com"
+    externalName: secure.internal.com
+    domain: "secure.example.com"
     ingress:
-      enabled: true
-      tlsEnabled: false
-```
-
-### Using Existing Certificate
-
-To use an existing certificate:
-
-```yaml
-externalServices:
-  existing-cert-service:
-    enabled: true
-    namespace: service
-    externalName: existing-cert.example.com
-    domain: "existing-cert.example.com"
-    ingress:
-      enabled: true
       tlsEnabled: true
-      useExistingCert: "my-existing-cert-secret"
+      useExistingCert: "my-cert-secret"
 ```
 
-## Installing the Chart
-
-```bash
-helm install my-external-services ./external-services-chart -f custom-values.yaml
-```
-
-## Upgrading the Chart
-
-```bash
-helm upgrade my-external-services ./external-services-chart -f custom-values.yaml
-```
+---
+*Part of the [Homelab Helm Charts](../../README.md) collection.*

@@ -21,6 +21,12 @@ jobs:
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
 
+      - name: Lint charts
+        run: |
+          for chart in charts/*/; do
+            helm lint "$chart"
+          done
+
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.7.0
         env:
