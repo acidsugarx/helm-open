@@ -1,3 +1,4 @@
+![Version: 0.1.3](https://img.shields.io/badge/Version-0.1.1-informational?style=flat-square) ![Type: network-helper](https://img.shields.io/badge/Type-network--helper-informational?style=flat-square)
 # External Services 🌐
 
 A Helm chart for easily deploying external services with ingress and TLS termination in private Kubernetes networks.
