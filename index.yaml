@@ -19,6 +19,29 @@ entries:
   external-services:
   - apiVersion: v2
     appVersion: "1.0"
+    created: "2025-11-05T12:08:06.110658639Z"
+    description: A Helm chart for easily deploying external services with ingress
+      and TLS termination in private Kubernetes networks
+    digest: 899a66dba49f3c601aa71b0e8b6fe608c39757815379a6cda2c61cfd85a068e2
+    home: https://github.com/acidsugarx/helm-open
+    keywords:
+    - external-services
+    - ingress
+    - tls
+    - networking
+    - proxy
+    maintainers:
+    - email: jazer23569@gmail.com
+      name: Ilya Gilev
+    name: external-services
+    sources:
+    - https://github.com/acidsugarx/helm-open
+    type: application
+    urls:
+    - https://github.com/acidsugarx/helm-open/releases/download/external-services-0.1.2/external-services-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
+    appVersion: "1.0"
     created: "2025-11-04T18:10:05.173011495Z"
     description: A Helm chart for easily deploying external services with ingress
       and TLS termination in private Kubernetes networks
@@ -50,4 +73,4 @@ entries:
     urls:
     - https://github.com/acidsugarx/helm-open/releases/download/external-services-0.1.0/external-services-0.1.0.tgz
     version: 0.1.0
-generated: "2025-11-04T19:57:57.539743554Z"
+generated: "2025-11-05T12:08:06.110674618Z"
