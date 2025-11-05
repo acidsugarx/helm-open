@@ -2,7 +2,7 @@ apiVersion: v2
 name: external-services
 description: A Helm chart for easily deploying external services with ingress and TLS termination in private Kubernetes networks
 type: application
-version: 0.1.1
+version: 0.1.2
 appVersion: "1.0"
 keywords:
   - external-services

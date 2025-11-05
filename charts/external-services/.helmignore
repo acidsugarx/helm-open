@@ -18,7 +18,6 @@
 .DS_Store
 # Documentation
 docs/
-README.md
 # Tests
 tests/
 # Examples
