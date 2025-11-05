@@ -1,0 +1,108 @@
+name: Update Release Notes
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  update-notes:
+    runs-on: ubuntu-latest
+    if: contains(github.event.release.tag_name, '-')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Parse Release Tag
+        id: parse
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+          CHART_NAME=$(echo "$TAG" | rev | cut -d- -f2- | rev)
+          VERSION=$(echo "$TAG" | rev | cut -d- -f1 | rev)
+
+          echo "chart_name=${CHART_NAME}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          CHART="${{ steps.parse.outputs.chart_name }}"
+          TAG="${{ steps.parse.outputs.tag }}"
+
+          # Получаем предыдущий тег
+          PREV_TAG=$(git tag -l "${CHART}-*" --sort=-version:refname | grep -v "^${TAG}$" | head -1)
+
+          echo "prev_tag=${PREV_TAG}" >> $GITHUB_OUTPUT
+
+          # Генерируем changelog
+          if [ -z "$PREV_TAG" ]; then
+            CHANGELOG=$(git log --pretty=format:"- **%s** ([%h](https://github.com/${{ github.repository }}/commit/%h)) by @%an" -- "charts/${CHART}")
+            COMMITS=$(git rev-list --count HEAD -- "charts/${CHART}")
+            FILES=$(git ls-tree -r HEAD --name-only "charts/${CHART}" | wc -l)
+          else
+            CHANGELOG=$(git log ${PREV_TAG}..${TAG} --pretty=format:"- **%s** ([%h](https://github.com/${{ github.repository }}/commit/%h)) by @%an" -- "charts/${CHART}")
+            COMMITS=$(git rev-list --count ${PREV_TAG}..${TAG} -- "charts/${CHART}")
+            FILES=$(git diff --name-only ${PREV_TAG}..${TAG} -- "charts/${CHART}" | wc -l)
+          fi
+
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="- Chart package updated"
+          fi
+
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "commits=${COMMITS}" >> $GITHUB_OUTPUT
+          echo "files=${FILES}" >> $GITHUB_OUTPUT
+
+      - name: Prepare compare link
+        id: compare_link
+        run: |
+          if [ -n "${{ steps.changelog.outputs.prev_tag }}" ]; then
+            echo "compare_link=- [Compare Versions](https://github.com/${{ github.repository }}/compare/${{ steps.changelog.outputs.prev_tag }}...${{ steps.parse.outputs.tag })"
+          else
+            echo "compare_link="
+          fi
+          echo "compare_link=$compare_link" >> $GITHUB_OUTPUT
+
+      - name: Update Release Notes
+        run: |
+          CHART="${{ steps.parse.outputs.chart_name }}"
+          VERSION="${{ steps.parse.outputs.version }}"
+          TAG="${{ steps.parse.outputs.tag }}"
+          COMPARE_LINK="${{ steps.compare_link.outputs.compare_link }}"
+
+          cat > /tmp/release_notes.md << EOF
+      # 📦 $CHART v$VERSION
+
+      ## What's Changed
+
+      ${{ steps.changelog.outputs.changelog }}
+
+      ## 📊 Statistics
+
+      - **Commits**: ${{ steps.changelog.outputs.commits }}
+      - **Files changed**: ${{ steps.changelog.outputs.files }}
+
+      ## 🚀 Installation
+
+      helm repo add homelab-charts https://acidsugarx.github.io/helm-open
+      helm repo update
+      helm install $CHART homelab-charts/$CHART --version $VERSION
+
+      ## 📚 Links
+
+      - [Repository](https://github.com/${{ github.repository }})
+      - [Chart Source](https://github.com/${{ github.repository }}/tree/$TAG/charts/$CHART)
+      $COMPARE_LINK
+      EOF
+
+          gh release edit "$TAG" --notes-file /tmp/release_notes.md
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
