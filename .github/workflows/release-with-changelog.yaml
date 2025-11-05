@@ -1,45 +1,43 @@
-name: Update Release Notes
+name: Publish Release with Changelog
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - '*-*'  # совпадает с <chart>-<version>
 
 permissions:
   contents: write
 
 jobs:
-  update-notes:
+  release:
     runs-on: ubuntu-latest
-    if: contains(github.event.release.tag_name, '-')
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Parse Release Tag
+      - name: Parse Tag
         id: parse
         run: |
-          TAG="${{ github.event.release.tag_name }}"
+          TAG="${{ github.ref_name }}"
+          if [[ "$TAG" != *-* ]]; then
+            echo "Tag format invalid, expected <chart>-<version>"
+            exit 1
+          fi
           CHART_NAME=$(echo "$TAG" | rev | cut -d- -f2- | rev)
           VERSION=$(echo "$TAG" | rev | cut -d- -f1 | rev)
-
-          echo "chart_name=${CHART_NAME}" >> $GITHUB_OUTPUT
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "chart_name=$CHART_NAME" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
 
       - name: Generate Changelog
         id: changelog
         run: |
           CHART="${{ steps.parse.outputs.chart_name }}"
           TAG="${{ steps.parse.outputs.tag }}"
-
-          # Get previous tag
           PREV_TAG=$(git tag -l "${CHART}-*" --sort=-version:refname | grep -v "^${TAG}$" | head -1)
 
-          echo "prev_tag=${PREV_TAG}" >> $GITHUB_OUTPUT
-
-          # Generating changelog
           if [ -z "$PREV_TAG" ]; then
             CHANGELOG=$(git log --pretty=format:"- **%s** ([%h](https://github.com/${{ github.repository }}/commit/%h)) by @%an" -- "charts/${CHART}")
             COMMITS=$(git rev-list --count HEAD -- "charts/${CHART}")
@@ -57,33 +55,30 @@ jobs:
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
-
-          echo "commits=${COMMITS}" >> $GITHUB_OUTPUT
-          echo "files=${FILES}" >> $GITHUB_OUTPUT
+          echo "commits=$COMMITS" >> $GITHUB_OUTPUT
+          echo "files=$FILES" >> $GITHUB_OUTPUT
+          echo "prev_tag=$PREV_TAG" >> $GITHUB_OUTPUT
 
       - name: Prepare compare link
-        id: compare_link
+        id: compare
         run: |
           if [ -n "${{ steps.changelog.outputs.prev_tag }}" ]; then
-            echo "compare_link=- [Compare Versions](https://github.com/${{ github.repository }}/compare/${{ steps.changelog.outputs.prev_tag }}...${{ steps.parse.outputs.tag }})"
+            echo "compare_link=- [Compare Versions](https://github.com/${{ github.repository }}/compare/${{ steps.changelog.outputs.prev_tag }}...${{ steps.parse.outputs.tag }})" >> $GITHUB_OUTPUT
           else
-            echo "compare_link="
+            echo "compare_link=" >> $GITHUB_OUTPUT
           fi
-          echo "compare_link=$compare_link" >> $GITHUB_OUTPUT
 
-      - name: Update Release Notes
+      - name: Create or update GitHub Release
         env:
+          TAG: ${{ steps.parse.outputs.tag }}
           CHART: ${{ steps.parse.outputs.chart_name }}
           VERSION: ${{ steps.parse.outputs.version }}
-          TAG: ${{ steps.parse.outputs.tag }}
           COMMITS: ${{ steps.changelog.outputs.commits }}
           FILES: ${{ steps.changelog.outputs.files }}
-          COMPARE_LINK: ${{ steps.compare_link.outputs.compare_link }}
+          COMPARE_LINK: ${{ steps.compare.outputs.compare_link }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
         run: |
           CHANGELOG="${{ steps.changelog.outputs.changelog }}"
-
           cat > /tmp/release_notes.md << EOF
           # 📦 $CHART v$VERSION
           
@@ -104,9 +99,9 @@ jobs:
           
           ## 📚 Links
           
-          - [Repository](https://github.com/$REPO)
-          - [Chart Source](https://github.com/$REPO/tree/$TAG/charts/$CHART)
-          $COMPARE_LINK
+          - [Repository](https://github.com/${{ github.repository }})
+          - [Chart Source](https://github.com/${{ github.repository }}/tree/$TAG/charts/$CHART)
+          ${COMPARE_LINK}
           EOF
 
-          gh release edit "$TAG" --notes-file /tmp/release_notes.md
+          gh release create "$TAG" --notes-file /tmp/release_notes.md --title "$CHART v$VERSION" --latest
