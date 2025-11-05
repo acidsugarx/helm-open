@@ -8,6 +8,10 @@ Docmost is an open-source collaborative wiki and documentation software. It is a
 
 ## Source Code
 
+**Helm chart:**
+* <https://github.com/acidsugarx/helm-open/tree/main/charts/docmost>
+
+**Docmost itself:**
 * <https://github.com/docmost/docmost>
 
 ## Prerequisites
@@ -21,7 +25,7 @@ To install the chart with the release name `docmost`:
 
 ```bash
 # Add the repo
-helm repo add docmost https://github.com/docmost/charts
+helm repo add docmost https://acidsugarx.github.io/helm-open
 
 # Install the chart
 helm install docmost docmost/docmost
