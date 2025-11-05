@@ -79,6 +79,7 @@ jobs:
           COMMITS: ${{ steps.changelog.outputs.commits }}
           FILES: ${{ steps.changelog.outputs.files }}
           COMPARE_LINK: ${{ steps.compare_link.outputs.compare_link }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
         run: |
           CHANGELOG="${{ steps.changelog.outputs.changelog }}"
@@ -109,5 +110,3 @@ jobs:
           EOF
 
           gh release edit "$TAG" --notes-file /tmp/release_notes.md
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
