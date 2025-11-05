@@ -1,4 +1,5 @@
 ![Latest Release](https://img.shields.io/github/v/release/acidsugarx/helm-open?logo=github)
+[![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/acidsugarx)](https://artifacthub.io/packages/search?repo=acidsugarx)
 
 # Homelab Helm Charts 🚀
 
