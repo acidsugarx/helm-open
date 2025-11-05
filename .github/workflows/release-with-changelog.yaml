@@ -34,12 +34,12 @@ jobs:
           CHART="${{ steps.parse.outputs.chart_name }}"
           TAG="${{ steps.parse.outputs.tag }}"
 
-          # Получаем предыдущий тег
+          # Get previous tag
           PREV_TAG=$(git tag -l "${CHART}-*" --sort=-version:refname | grep -v "^${TAG}$" | head -1)
 
           echo "prev_tag=${PREV_TAG}" >> $GITHUB_OUTPUT
 
-          # Генерируем changelog
+          # Generating changelog
           if [ -z "$PREV_TAG" ]; then
             CHANGELOG=$(git log --pretty=format:"- **%s** ([%h](https://github.com/${{ github.repository }}/commit/%h)) by @%an" -- "charts/${CHART}")
             COMMITS=$(git rev-list --count HEAD -- "charts/${CHART}")
@@ -72,36 +72,41 @@ jobs:
           echo "compare_link=$compare_link" >> $GITHUB_OUTPUT
 
       - name: Update Release Notes
+        env:
+          CHART: ${{ steps.parse.outputs.chart_name }}
+          VERSION: ${{ steps.parse.outputs.version }}
+          TAG: ${{ steps.parse.outputs.tag }}
+          COMMITS: ${{ steps.changelog.outputs.commits }}
+          FILES: ${{ steps.changelog.outputs.files }}
+          COMPARE_LINK: ${{ steps.compare_link.outputs.compare_link }}
+          REPO: ${{ github.repository }}
         run: |
-          CHART="${{ steps.parse.outputs.chart_name }}"
-          VERSION="${{ steps.parse.outputs.version }}"
-          TAG="${{ steps.parse.outputs.tag }}"
-          COMPARE_LINK="${{ steps.compare_link.outputs.compare_link }}"
+          CHANGELOG="${{ steps.changelog.outputs.changelog }}"
 
           cat > /tmp/release_notes.md << EOF
-            # 📦 $CHART v$VERSION
-            
-            ## What's Changed
-            
-            ${{ steps.changelog.outputs.changelog }}
-            
-            ## 📊 Statistics
-            
-            - **Commits**: ${{ steps.changelog.outputs.commits }}
-            - **Files changed**: ${{ steps.changelog.outputs.files }}
-            
-            ## 🚀 Installation
-            
-            helm repo add homelab-charts https://acidsugarx.github.io/helm-open
-            helm repo update
-            helm install $CHART homelab-charts/$CHART --version $VERSION
-            
-            ## 📚 Links
-            
-            - [Repository](https://github.com/${{ github.repository }})
-            - [Chart Source](https://github.com/${{ github.repository }}/tree/$TAG/charts/$CHART)
-            $COMPARE_LINK
-            EOF
+          # 📦 $CHART v$VERSION
+          
+          ## What's Changed
+          
+          $CHANGELOG
+          
+          ## 📊 Statistics
+          
+          - **Commits**: $COMMITS
+          - **Files changed**: $FILES
+          
+          ## 🚀 Installation
+          
+          helm repo add homelab-charts https://acidsugarx.github.io/helm-open
+          helm repo update
+          helm install $CHART homelab-charts/$CHART --version $VERSION
+          
+          ## 📚 Links
+          
+          - [Repository](https://github.com/$REPO)
+          - [Chart Source](https://github.com/$REPO/tree/$TAG/charts/$CHART)
+          $COMPARE_LINK
+          EOF
 
           gh release edit "$TAG" --notes-file /tmp/release_notes.md
         env:
