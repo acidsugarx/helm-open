@@ -65,7 +65,7 @@ jobs:
         id: compare_link
         run: |
           if [ -n "${{ steps.changelog.outputs.prev_tag }}" ]; then
-            echo "compare_link=- [Compare Versions](https://github.com/${{ github.repository }}/compare/${{ steps.changelog.outputs.prev_tag }}...${{ steps.parse.outputs.tag })"
+            echo "compare_link=- [Compare Versions](https://github.com/${{ github.repository }}/compare/${{ steps.changelog.outputs.prev_tag }}...${{ steps.parse.outputs.tag }})"
           else
             echo "compare_link="
           fi
