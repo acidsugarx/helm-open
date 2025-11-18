@@ -1,0 +1,27 @@
+# Argo CD Resources Helm Chart
+# This chart manages Applications, ApplicationSets, Repositories and RepoCreds
+# All values can be provided in external values files per project/environment
+
+# --- namespace for argo-cd installation, by default - argocd
+namespace: argocd
+
+# --- Default empty structures - override in project-specific values files
+applications: {}
+#  app-name:
+#    project: default
+#    source: {}
+#    destination: {}
+
+applicationsets: {}
+#  appset-name:
+#    generators: []
+#    template: {}
+
+repositories: {}
+#  repo-name:
+#    url: ""
+#    type: git
+
+repocreds: {}
+#  creds-name:
+#    url: ""

@@ -1,0 +1,90 @@
+{{- if .Values.applications }}
+{{- range $name, $app := .Values.applications }}
+{{- if $app }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $name }}
+  {{- with $.Values.namespace }}
+  namespace: {{ . }}
+  {{- else }}
+  namespace: argocd
+  {{- end }}
+  {{- with $app.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $app.labels }}
+  labels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $app.project }}
+  project: {{ . }}
+  {{- else }}
+  project: default
+  {{- end }}
+  
+  {{- with $app.source }}
+  source:
+    repoURL: {{ required "applications[].source.repoURL is required" .repoURL }}
+    targetRevision: {{ .targetRevision | default "HEAD" }}
+    {{- if .chart }}
+    chart: {{ .chart }}
+    {{- else if .path }}
+    path: {{ .path }}
+    {{- end }}
+    
+    {{- with .helm }}
+    helm:
+      {{- with .releaseName }}
+      releaseName: {{ . }}
+      {{- end }}
+      {{- with .values }}
+      values: |
+        {{- . | nindent 8 }}
+      {{- end }}
+      {{- with .valueFiles }}
+      valueFiles:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .parameters }}
+      parameters:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- end }}
+    
+    {{- with .kustomize }}
+    kustomize:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- else }}
+    {{- required "applications[].source is required" nil }}
+  {{- end }}
+  
+  {{- with $app.destination }}
+  destination:
+    server: {{ required "applications[].destination.server is required" .server }}
+    namespace: {{ required "applications[].destination.namespace is required" .namespace }}
+  {{- else }}
+    {{- required "applications[].destination is required" nil }}
+  {{- end }}
+  
+  {{- with $app.syncPolicy }}
+  syncPolicy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  
+  {{- with $app.ignoreDifferences }}
+  ignoreDifferences:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  
+  {{- with $app.info }}
+  info:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

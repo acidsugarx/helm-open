@@ -1,0 +1,12 @@
+apiVersion: v2
+name: argo-helper
+description: |
+  A helm chart for manage argo-cd resources:
+  applications, repositories, repocreds, application-sets
+type: application
+version: 0.1.9
+appVersion: "3.2.0"
+
+maintainers:
+  - name: Ilya Gilev
+    email: jazer23569@gmail.com

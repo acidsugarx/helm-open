@@ -1,0 +1,43 @@
+{{- if .Values.applicationsets }}
+{{- range $name, $appset := .Values.applicationsets }}
+{{- if $appset }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: {{ $name }}
+  {{- with $.Values.namespace }}
+  namespace: {{ . }}
+  {{- else }}
+  namespace: argocd
+  {{- end }}
+  {{- with $appset.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $appset.labels }}
+  labels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $appset.generators }}
+  generators:
+    {{- toYaml . | nindent 4 }}
+  {{- else }}
+    {{- required "applicationsets[].generators is required" nil }}
+  {{- end }}
+  
+  {{- with $appset.template }}
+  template:
+    {{- toYaml . | nindent 4 }}
+  {{- else }}
+    {{- required "applicationsets[].template is required" nil }}
+  {{- end }}
+  
+  {{- with $appset.syncPolicy }}
+  syncPolicy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

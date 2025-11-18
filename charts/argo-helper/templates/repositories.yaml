@@ -1,0 +1,34 @@
+{{- if .Values.repositories }}
+{{- range $name, $repo := .Values.repositories }}
+{{- if $repo }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: repo-{{ $name }}
+  {{- with $.Values.namespace }}
+  namespace: {{ . }}
+  {{- else }}
+  namespace: argocd
+  {{- end }}
+  labels:
+    argocd.argoproj.io/secret-type: repository
+type: Opaque
+stringData:
+  url: {{ required "repositories[].url is required" $repo.url }}
+  {{- with $repo.type }}
+  type: {{ . }}
+  {{- end }}
+  {{- with $repo.username }}
+  username: {{ . }}
+  {{- end }}
+  {{- with $repo.password }}
+  password: {{ . }}
+  {{- end }}
+  {{- with $repo.sshPrivateKey }}
+  sshPrivateKey: |
+{{ . | indent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,21 @@
+namespace: argocd
+applications:
+  my-app-prod:
+    project: production
+    source:
+      repoURL: https://gitlab.com/myorg/my-app.git
+      targetRevision: v1.2.0
+      path: helm/chart
+      helm:
+        releaseName: my-app
+        values: |
+          replicaCount: 3
+          image:
+            tag: "1.2.0"
+    destination:
+      server: https://kubernetes.default.svc
+      namespace: production
+    syncPolicy:
+      automated:
+        prune: false
+        selfHeal: true

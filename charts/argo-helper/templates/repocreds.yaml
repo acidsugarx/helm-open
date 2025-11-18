@@ -1,0 +1,31 @@
+{{- if .Values.repocreds }}
+{{- range $name, $creds := .Values.repocreds }}
+{{- if $creds }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: repocreds-{{ $name }}
+  {{- with $.Values.namespace }}
+  namespace: {{ . }}
+  {{- else }}
+  namespace: argocd
+  {{- end }}
+  labels:
+    argocd.argoproj.io/secret-type: repo-creds
+type: Opaque
+stringData:
+  url: {{ required "repocreds[].url is required" $creds.url }}
+  {{- with $creds.username }}
+  username: {{ . }}
+  {{- end }}
+  {{- with $creds.password }}
+  password: {{ . }}
+  {{- end }}
+  {{- with $creds.sshPrivateKey }}
+  sshPrivateKey: |
+{{ . | indent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
