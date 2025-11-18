@@ -1,5 +1,20 @@
 apiVersion: v1
 entries:
+  argo-helper:
+  - apiVersion: v2
+    appVersion: 3.2.0
+    created: "2025-11-18T20:26:51.060180025Z"
+    description: 'A helm chart for manage argo-cd resources: applications, repositories,
+      repocreds, application-sets '
+    digest: c80e4df8c01e1a2afbe4e4ae6c2f327cb521c15b025ccb04fce902f64549d026
+    maintainers:
+    - email: jazer23569@gmail.com
+      name: Ilya Gilev
+    name: argo-helper
+    type: application
+    urls:
+    - https://github.com/acidsugarx/helm-open/releases/download/argo-helper-0.1.9/argo-helper-0.1.9.tgz
+    version: 0.1.9
   docmost:
   - apiVersion: v2
     appVersion: 0.23.2
@@ -73,4 +88,4 @@ entries:
     urls:
     - https://github.com/acidsugarx/helm-open/releases/download/external-services-0.1.0/external-services-0.1.0.tgz
     version: 0.1.0
-generated: "2025-11-05T12:08:06.110674618Z"
+generated: "2025-11-18T20:26:51.060191617Z"
